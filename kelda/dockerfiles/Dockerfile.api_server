@@ -1,0 +1,10 @@
+FROM phusion/passenger-ruby23
+
+RUN rm /etc/nginx/sites-enabled/default
+RUN rm /etc/service/nginx/down
+
+RUN apt-get update && apt-get install -y postgresql-client tzdata
+
+RUN cd /home/app && git clone https://github.com/curoverse/arvados
+WORKDIR /home/app/arvados/services/api
+RUN bundle install

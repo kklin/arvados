@@ -1,0 +1,14 @@
+FROM golang:1.9 as builder
+
+RUN go get github.com/kklin/arvados/services/keepstore
+RUN go get github.com/kklin/arvados/services/keep-balance
+RUN go get github.com/kklin/arvados/services/keep-web
+RUN go get github.com/kklin/arvados/services/keepproxy
+
+FROM ubuntu:16.04
+COPY --from=builder /go/bin/keepstore /usr/local/bin/keepstore
+COPY --from=builder /go/bin/keep-balance /usr/local/bin/keep-balance
+COPY --from=builder /go/bin/keep-web /usr/local/bin/keep-web
+COPY --from=builder /go/bin/keepproxy /usr/local/bin/keepproxy
+
+ENTRYPOINT []

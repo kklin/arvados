@@ -1,0 +1,9 @@
+Client:
+  APIHost: {{myhost}}:443
+Listen: ":9003"
+Postgres:
+  dbname: {{name}}
+  host: {{dbhost}}
+  password: {{password}}
+  user: {{user}}
+  sslmode: disable

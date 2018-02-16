@@ -1,0 +1,9 @@
+FROM ruby:2.3
+
+RUN git clone https://github.com/curoverse/sso-devise-omniauth-provider
+
+WORKDIR sso-devise-omniauth-provider
+
+RUN bundle install
+
+ENTRYPOINT []

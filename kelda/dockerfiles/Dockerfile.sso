@@ -1,0 +1,9 @@
+FROM phusion/passenger-ruby23
+
+RUN cd /home/app && git clone https://github.com/curoverse/sso-devise-omniauth-provider
+WORKDIR /home/app/sso-devise-omniauth-provider
+
+RUN bundle install
+
+RUN rm /etc/nginx/sites-enabled/default
+RUN rm /etc/service/nginx/down

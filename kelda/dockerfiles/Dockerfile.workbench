@@ -1,0 +1,23 @@
+FROM phusion/passenger-ruby23
+
+RUN apt-get update && apt-get install -y tzdata
+RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
+RUN apt-get install -y nodejs
+
+RUN cd /home/app && git clone https://github.com/curoverse/arvados
+WORKDIR /home/app/arvados/apps/workbench
+
+RUN bundle install
+
+RUN cp config/application.yml.example config/application.yml -f
+RUN cp config/environments/production.rb.example config/environments/production.rb -f
+RUN sed -i 's/secret_token: ~/secret_token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/' config/application.yml
+RUN sed -i 's/keep_web_url: false/keep_web_url: exampledotcom/' config/application.yml
+RUN mkdir tmp
+RUN RAILS_ENV=production bundle exec rake npm:install
+RUN rm config/application.yml config/environments/production.rb
+
+# TODO: Run asset precompilation here as well?
+
+RUN rm /etc/nginx/sites-enabled/default
+RUN rm /etc/service/nginx/down

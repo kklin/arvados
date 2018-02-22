@@ -28,7 +28,7 @@
 // 4) Click "Files" and refresh the page. The uploaded file should appear.
 //
 // Crunch: Run a Docker container using Crunch.
-// 1) SSH into the shell server with `arvados ssh -t arvados-shell-server bash`.
+// 1) SSH into the shell server with `kelda ssh -t arvados-shell-server bash`.
 // 2) Run `arv-keepdocker --pull arvados/jobs latest`
 // 3) Follow the example under "Test the dispatcher" at http://doc.arvados.org/install/crunch2-slurm/install-test.html.
 //    Testing squeue is not necessary.

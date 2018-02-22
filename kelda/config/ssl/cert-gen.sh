@@ -1,5 +1,11 @@
 # Usage: ./cert-gen.sh <floatingIP>
 
+if [[ -z $1 ]] ; then
+    echo "ERROR: A floating IP must be supplied."
+    echo "Usage: $0 <floatingIP>"
+    exit 1
+fi
+
 cat > ssl.conf <<EOF
 [req]
 distinguished_name = $1

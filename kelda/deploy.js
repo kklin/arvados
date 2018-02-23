@@ -32,6 +32,14 @@
 // 2) Run `arv-keepdocker --pull arvados/jobs latest`
 // 3) Follow the example under "Test the dispatcher" at http://doc.arvados.org/install/crunch2-slurm/install-test.html.
 //    Testing squeue is not necessary.
+//
+// If uploading to Keep fails with the message "Bad response from slice
+// upload", it's possible that the Keep Proxy cache hasn't picked up the Keep
+// Stores. The cache is updated every 5 minutes, so if the arvados-keep-store
+// container starts before the arvados-shell-server (which registers the Keep
+// servers), the Keep Proxy might believe that there aren't any Keep Stores in
+// the cluster. You can force the Keep Proxy cache to refesh by running:
+//   kelda ssh arvados-keep-proxy kill -hup 1
 
 const kelda = require('kelda');
 const mustache = require('mustache');

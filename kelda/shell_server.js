@@ -17,9 +17,6 @@ class ShellServer extends kelda.Container {
       name: 'arvados-shell-server',
       image: 'quay.io/kklin/arvados-shell-server',
       env: {
-        // Setup and log in as the test admin account, then follow the
-        // instructions here to get the API token:
-        // http://doc.arvados.org/user/reference/api-tokens.html.
         ARVADOS_API_TOKEN: new kelda.Secret('shell-server-api-token'),
         ARVADOS_API_HOST: `${apiServer.getHostname()}:${apiServer.port}`,
         ARVADOS_API_HOST_INSECURE: "true",

@@ -79,7 +79,7 @@ function main() {
   const shellServer = new ShellServer(apiServer);
   const keep = new KeepCluster(apiServer, shellServer, consts.keepScale, blobSigningKey);
   const workbench = new Workbench(apiServer, keep.web);
-  const slurm = new SLURM(apiServer, consts.slurmScale, 'foobarzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz');
+  const slurm = new SLURM(apiServer, keep.stores, consts.slurmScale, 'foobarzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz');
 
   const baseMachine = new kelda.Machine({provider: 'Amazon', size: 'm4.xlarge'});
   const machineWithFloatingIP = baseMachine.clone();
@@ -91,7 +91,8 @@ function main() {
   })
 
   // The servers listening for inbound public connections must all be on the
-  // machine with a floating IP.
+  // machine with a floating IP since their HTTPS certificate is only valid for
+  // the floating IP.
   ssoServer.placeOn(machineWithFloatingIP);
   apiServer.placeOn(machineWithFloatingIP);
   workbench.placeOn(machineWithFloatingIP);
@@ -104,16 +105,6 @@ function main() {
   shellServer.deploy(infra);
   keep.deploy(infra);
   slurm.deploy(infra);
-
-  // TODO: Remove debug ACLs.
-  // Debug: Allow outbound traffic for apt-get.
-  infra.containers.forEach((c) => {
-    kelda.allowTraffic(c, kelda.publicInternet, 80);
-    kelda.allowTraffic(c, kelda.publicInternet, 443);
-  });
-
-  // Debug: Open all ports between all containers.
-  kelda.allowTraffic(Array.from(infra.containers), Array.from(infra.containers), new kelda.PortRange(1, 65535));
 }
 
 main();

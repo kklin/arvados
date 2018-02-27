@@ -4,6 +4,7 @@ const mustache = require('mustache');
 const slurmConfTemplate = `ControlMachine={{controllerHost}}
 SlurmctldPort=6817
 SlurmdPort=6818
+SrunPortRange={{minSrunPort}}-{{maxSrunPort}}
 AuthType=auth/munge
 StateSaveLocation=/tmp
 SlurmdSpoolDir=/tmp/slurmd
@@ -46,7 +47,7 @@ PartitionName=compute Nodes={{nodeNames}} Default=YES Shared=YES
 `
 
 class SLURM {
-  constructor(apiServer, n, mungeKey) {
+  constructor(apiServer, keepStores, n, mungeKey) {
     this.controller = new kelda.Container({
 			name: 'slurm-controller',
 			image: 'quay.io/kklin/slurm',
@@ -80,9 +81,15 @@ class SLURM {
 			],
     }));
 
+    // srun listens on random ports.
+    const srunPorts = new kelda.PortRange(60001, 63000);
+    kelda.allowTraffic(this.computeNodes, this.controller, srunPorts);
+
     const nodeNames = this.computeNodes.map((c) => c.getHostname()).join(',');
     const slurmConf = mustache.render(slurmConfTemplate, {
 			controllerHost: this.controller.getHostname(),
+			minSrunPort: srunPorts.min,
+			maxSrunPort: srunPorts.max,
     	nodeNames,
 		});
 		this.computeNodes.concat(this.controller).forEach((c) => {
@@ -92,9 +99,19 @@ class SLURM {
 			};
 		})
 
-    // arv-mount connects to the API server. It shouldn't go via the public
-    // internet though..
+    // The compute nodes register themselves with the controller.
+    kelda.allowTraffic(this.computeNodes, this.controller, 6817);
+
+    // The controller sends jobs to the compute nodes.
+    kelda.allowTraffic(this.controller, this.computeNodes, 6818);
+
+    // arv-mount connects to the API server. I'm not sure why it's also
+    // connecting via the public internet though..
+    kelda.allowTraffic(this.computeNodes, apiServer, 444);
     kelda.allowTraffic(this.computeNodes, kelda.publicInternet, 444);
+
+    // The compute nodes pull data from Keep.
+    kelda.allowTraffic(this.computeNodes, keepStores, keepStores[0].port);
   }
 
   deploy(infra) {

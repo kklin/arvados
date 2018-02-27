@@ -5,8 +5,8 @@ const consts = require('./consts');
 class KeepCluster {
   constructor(apiServer, shellServer, nStores, blobSigningKey) {
     this.stores = Array(nStores).fill().map(() => new KeepStore(blobSigningKey));
-    this.proxy = new KeepProxy(apiServer);
-    this.web = new KeepWeb(apiServer);
+    this.proxy = new KeepProxy(apiServer, this.stores);
+    this.web = new KeepWeb(apiServer, this.stores);
 
     const storeInitCommands = this.stores.map(c =>
       createKeepServiceCommand('disk', c.getHostname(), c.port, false));
@@ -48,7 +48,7 @@ class KeepStore extends kelda.Container {
 }
 
 class KeepProxy extends kelda.Container {
-  constructor(apiServer) {
+  constructor(apiServer, keepStores) {
     super({
       name: 'arvados-keep-proxy',
       image: 'quay.io/kklin/arvados-keep',
@@ -59,7 +59,11 @@ class KeepProxy extends kelda.Container {
         ARVADOS_API_HOST_INSECURE: "true",
       },
     });
-    this.port = 25107;
+
+    this.port = getPort(keepStores);
+
+    kelda.allowTraffic(this, apiServer, apiServer.port);
+    kelda.allowTraffic(this, keepStores, this.port);
 
     this.httpsProxy = new nginx.HTTPSProxy(this, {
       hostMachine: consts.floatingIP,
@@ -75,7 +79,7 @@ class KeepProxy extends kelda.Container {
 }
 
 class KeepWeb extends kelda.Container {
-  constructor(apiServer) {
+  constructor(apiServer, keepStores) {
     super({
       name: 'arvados-keep-web',
       image: 'quay.io/kklin/arvados-keep',
@@ -88,6 +92,9 @@ class KeepWeb extends kelda.Container {
     });
     this.port = 9002;
 
+    kelda.allowTraffic(this, apiServer, apiServer.port);
+    kelda.allowTraffic(this, keepStores, getPort(keepStores));
+
     this.httpsProxy = new nginx.HTTPSProxy(this, {
       hostMachine: consts.floatingIP,
       webSocket: true,
@@ -99,6 +106,15 @@ class KeepWeb extends kelda.Container {
     super.deploy(infra);
     this.httpsProxy.deploy(infra);
   }
+}
+
+function getPort(containers) {
+  const ports = Array.from(new Set(containers.map(c => c.port)));
+  if (ports.length != 1) {
+    throw new Error('containers should listen on the same port. ' +
+      `Found ${ports}`);
+  }
+  return containers[0].port;
 }
 
 function createKeepServiceCommand(type, host, port, ssl) {

@@ -4,7 +4,7 @@ const consts = require('./consts');
 
 class KeepCluster {
   constructor(apiServer, shellServer, nStores, blobSigningKey) {
-    this.stores = Array(nStores).fill().map(() => new KeepStore(apiServer, blobSigningKey));
+    this.stores = Array(nStores).fill().map(() => new KeepStore(blobSigningKey));
     this.proxy = new KeepProxy(apiServer);
     this.web = new KeepWeb(apiServer);
 
@@ -29,7 +29,7 @@ cat /self-signed-cert.pem >> /etc/ssl/certs/ca-certificates.crt
 }
 
 class KeepStore extends kelda.Container {
-  constructor(apiServer, blobSigningKey) {
+  constructor(blobSigningKey) {
     super({
       name: 'arvados-keep-store',
       image: 'quay.io/kklin/arvados-keep',

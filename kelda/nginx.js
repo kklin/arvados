@@ -21,6 +21,9 @@ server {
   # Clients need to be able to upload blocks of data up to 64MiB in size.
   client_max_body_size  64m;
 
+  # Redirect plain HTTP requests to HTTPS.
+  error_page 497 301 =307 https://$host:$server_port$request_uri;
+
   location / {
     proxy_pass          http://httpContainer;
     {{#webSocket}}

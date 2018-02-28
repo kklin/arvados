@@ -7,7 +7,7 @@ const wsConfTemplate = readFile('config/arvados-ws/ws.yml');
 const workbenchConfTemplate = readFile('config/arvados-workbench/application.yml');
 const ssoConfTemplate = readFile('config/arvados-sso/application.yml');
 const dbConfTemplate = readFile('config/database.yml');
-const ssoConfigDir = '/sso-devise-omniauth-provider/config';
+const ssoConfigDir = '/home/app/sso-devise-omniauth-provider/config';
 
 class SSOServer extends kelda.Container {
   constructor(postgres, db) {
@@ -19,7 +19,7 @@ class SSOServer extends kelda.Container {
         'bundle exec rake db:schema:load db:seed && ' +
         'bundle exec rake assets:precompile && ' +
         'bundle exec rails runner /client-init.rb && ' +
-        'bundle exec rails server'],
+        'exec /sbin/my_init'],
       env: { RAILS_ENV: 'production' },
     });
 
@@ -33,9 +33,20 @@ class SSOServer extends kelda.Container {
     const dbConfParams = Object.assign(db, { host: postgres.getHostname() });
     const dbConf = mustache.render(dbConfTemplate, dbConfParams);
     this.filepathToContent = {
+      '/etc/nginx/sites-enabled/sso.conf': `server {
+  listen 0.0.0.0:${this.port};
+  server_name insecure-sso;
+
+  root /home/app/sso-devise-omniauth-provider/public;
+  index  index.html index.htm index.php;
+
+  passenger_enabled on;
+  # If you're using RVM, uncomment the line below.
+  passenger_ruby /usr/local/rvm/wrappers/default/ruby;
+}
+`,
       [ path.join(ssoConfigDir, '/application.yml') ]: appConf,
       [ path.join(ssoConfigDir, '/database.yml') ]: dbConf,
-      // TODO: Make idempotent.
       '/client-init.rb': `c = Client.new
 c.name = "joshid"
 c.app_id = "arvados-server"
@@ -48,8 +59,18 @@ user.save!
 `,
     };
 
-    kelda.allowTraffic(kelda.publicInternet, this, this.port);
+    this.httpsProxy = new nginx.HTTPSProxy(this, {
+      hostMachine: consts.floatingIP,
+      webSocket: true,
+    });
+    kelda.allowTraffic(kelda.publicInternet, this.httpsProxy, this.port);
+
     kelda.allowTraffic(this, postgres, postgres.port);
+  }
+
+  deploy(infra) {
+    super.deploy(infra);
+    this.httpsProxy.deploy(infra);
   }
 }
 

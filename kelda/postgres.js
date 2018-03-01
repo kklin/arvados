@@ -19,7 +19,9 @@ EOSQL
 
 class Postgres extends kelda.Container {
   constructor(dbs) {
-    super('postgres', 'postgres:9.5', {
+    super({
+      name: 'postgres',
+      image: 'postgres:9.5',
       filepathToContent: {
         '/docker-entrypoint-initdb.d/create_dbs.sh': dbsToCreationScript(dbs),
       },

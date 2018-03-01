@@ -70,6 +70,11 @@ class SLURM {
     });
     kelda.allowTraffic(this.controller, apiServer, apiServer.port);
 
+    const dockerVolume = new kelda.Volume({
+      name: 'docker',
+      type: 'hostPath',
+      path: '/var/run/docker.sock',
+    });
     this.computeNodes = Array(n).fill().map(() => new kelda.Container({
       name: 'slurm-compute',
       image: 'quay.io/kklin/slurm',
@@ -79,6 +84,13 @@ class SLURM {
         'sudo -u munge munged & ' +
         'slurmd -D',
       ],
+      volumeMounts: [
+        new kelda.VolumeMount({
+          volume: dockerVolume,
+          mountPath: dockerVolume.path,
+        }),
+      ],
+      privileged: true,
     }));
 
     // srun listens on random ports.

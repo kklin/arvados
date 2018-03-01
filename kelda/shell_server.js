@@ -26,6 +26,16 @@ class ShellServer extends kelda.Container {
         'exec /sbin/my_init'],
     });
 
+    const dockerVolume = new kelda.Volume({
+      name: 'docker',
+      type: 'hostPath',
+      path: '/var/run/docker.sock',
+    });
+    this.volumeMounts = [new kelda.VolumeMount({
+      volume: dockerVolume,
+      mountPath: dockerVolume.path,
+    })];
+
     kelda.allowTraffic(this, apiServer, apiServer.port);
     // TODO: It should just go through the private network... not sure why it's going to pub.
     kelda.allowTraffic(this, kelda.publicInternet, apiServer.port);

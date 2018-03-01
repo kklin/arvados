@@ -43,7 +43,6 @@
 
 const kelda = require('kelda');
 const mustache = require('mustache');
-const { execSync } = require('child_process');
 const nginx = require('./nginx');
 const consts = require('./consts');
 const { SLURM } = require('./slurm');
@@ -54,11 +53,6 @@ const { SSOServer, WebSocket, Workbench } = require('./workbench');
 const { APIServer } = require('./api_server');
 
 function main() {
-  const keldaVersion = execSync('kelda version | grep Daemon | cut -d ":" -f 2').toString().trim();
-  if (keldaVersion !== 'arvados') {
-    throw new Error(`Kelda daemon version is ${keldaVersion}. Crunch will not work without the custom Arvados Kelda build.`);
-  }
-
   // TODO: Use `kelda.Secret`s for the passwords and keys.
   const ssoDB = {
     name: 'arvados_sso_production',

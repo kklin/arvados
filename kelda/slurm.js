@@ -49,8 +49,8 @@ PartitionName=compute Nodes={{nodeNames}} Default=YES Shared=YES
 class SLURM {
   constructor(apiServer, keepStores, n, mungeKey) {
     this.controller = new kelda.Container({
-			name: 'slurm-controller',
-			image: 'quay.io/kklin/slurm',
+      name: 'slurm-controller',
+      image: 'quay.io/kklin/slurm',
       env: {
         ARVADOS_API_HOST: `${apiServer.getHostname()}:${apiServer.port}`,
         ARVADOS_API_TOKEN: new kelda.Secret('crunch-dispatcher-api-token'),
@@ -60,25 +60,25 @@ class SLURM {
       // the process. This is bad because if munged or slurmctld crashes,
       // nothing will restart it. Instead, the container should bundle a real
       // init system, and handle managing the backgrounded process.
-			command: ['sh', '-c',
-				'chown munge /etc/munge/munge.key; ' +
-				'chmod 0400 /etc/munge/munge.key; ' +
-				'sudo -u munge munged & ' +
-				'slurmctld -D & ' +
-				'crunch-dispatch-slurm',
-			],
+      command: ['sh', '-c',
+        'chown munge /etc/munge/munge.key; ' +
+        'chmod 0400 /etc/munge/munge.key; ' +
+        'sudo -u munge munged & ' +
+        'slurmctld -D & ' +
+        'crunch-dispatch-slurm',
+      ],
     });
     kelda.allowTraffic(this.controller, apiServer, apiServer.port);
 
     this.computeNodes = Array(n).fill().map(() => new kelda.Container({
-			name: 'slurm-compute',
-			image: 'quay.io/kklin/slurm',
-			command: ['sh', '-c',
-				'chown munge /etc/munge/munge.key; ' +
-				'chmod 0400 /etc/munge/munge.key; ' +
-				'sudo -u munge munged & ' +
-				'slurmd -D',
-			],
+      name: 'slurm-compute',
+      image: 'quay.io/kklin/slurm',
+      command: ['sh', '-c',
+        'chown munge /etc/munge/munge.key; ' +
+        'chmod 0400 /etc/munge/munge.key; ' +
+        'sudo -u munge munged & ' +
+        'slurmd -D',
+      ],
     }));
 
     // srun listens on random ports.
@@ -87,17 +87,17 @@ class SLURM {
 
     const nodeNames = this.computeNodes.map((c) => c.getHostname()).join(',');
     const slurmConf = mustache.render(slurmConfTemplate, {
-			controllerHost: this.controller.getHostname(),
-			minSrunPort: srunPorts.min,
-			maxSrunPort: srunPorts.max,
-    	nodeNames,
-		});
-		this.computeNodes.concat(this.controller).forEach((c) => {
-			c.filepathToContent = {
-				'/etc/slurm-llnl/slurm.conf': slurmConf,
-				'/etc/munge/munge.key': mungeKey,
-			};
-		})
+      controllerHost: this.controller.getHostname(),
+      minSrunPort: srunPorts.min,
+      maxSrunPort: srunPorts.max,
+      nodeNames,
+    });
+    this.computeNodes.concat(this.controller).forEach((c) => {
+      c.filepathToContent = {
+        '/etc/slurm-llnl/slurm.conf': slurmConf,
+        '/etc/munge/munge.key': mungeKey,
+      };
+    })
 
     // The compute nodes register themselves with the controller.
     kelda.allowTraffic(this.computeNodes, this.controller, 6817);
@@ -115,9 +115,9 @@ class SLURM {
   }
 
   deploy(infra) {
-		this.computeNodes.forEach(c => c.deploy(infra));
-		this.controller.deploy(infra);
-	}
+    this.computeNodes.forEach(c => c.deploy(infra));
+    this.controller.deploy(infra);
+  }
 }
 
 module.exports = { SLURM };

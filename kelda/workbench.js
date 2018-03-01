@@ -2,6 +2,7 @@ const kelda = require('kelda');
 const mustache = require('mustache');
 const consts = require('./consts');
 const nginx = require('./nginx');
+const rails_util = require('./rails_util');
 
 const wsConfTemplate = readFile('config/arvados-ws/ws.yml');
 const workbenchConfTemplate = readFile('config/arvados-workbench/application.yml');
@@ -14,11 +15,7 @@ class SSOServer extends kelda.Container {
     super({
       name: 'arvados-sso-server',
       image: 'quay.io/kklin/arvados-sso-server',
-      command: ['sh', '-c',
-        // TODO: Make idempotent by copying logic from postinst.sh.
-        'bundle exec rake db:schema:load db:seed && ' +
-        'bundle exec rake assets:precompile && ' +
-        'bundle exec rails runner /client-init.rb && ' +
+      command: ['sh', '-c', 'install /init-scripts/*.sh /etc/my_init.d && ' +
         'exec /sbin/my_init'],
       env: { RAILS_ENV: 'production' },
     });
@@ -33,6 +30,25 @@ class SSOServer extends kelda.Container {
     const dbConfParams = Object.assign(db, { host: postgres.getHostname() });
     const dbConf = mustache.render(dbConfTemplate, dbConfParams);
     this.filepathToContent = {
+      '/init-scripts/90-init-db.sh': rails_util.initDBScript('db:schema:load'),
+      '/init-scripts/91-precompile-assets.sh': `#!/bin/bash
+set -e
+bundle exec rake assets:precompile
+`,
+      '/init-scripts/92-init-client.sh': `#!/bin/bash
+set -e
+bundle exec rails runner /init-client.rb
+`,
+      '/init-client.rb': `c = Client.new
+c.name = "joshid"
+c.app_id = "arvados-server"
+c.app_secret = "app_secret"
+c.save!
+
+User.find_or_create_by_email(email: "test@example.com") do |user|
+  user.password = "passw0rd"
+end
+`,
       '/etc/nginx/sites-enabled/sso.conf': `server {
   listen 0.0.0.0:${this.port};
   server_name insecure-sso;
@@ -47,16 +63,6 @@ class SSOServer extends kelda.Container {
 `,
       [ path.join(ssoConfigDir, '/application.yml') ]: appConf,
       [ path.join(ssoConfigDir, '/database.yml') ]: dbConf,
-      '/client-init.rb': `c = Client.new
-c.name = "joshid"
-c.app_id = "arvados-server"
-c.app_secret = "app_secret"
-c.save!
-
-user = User.new(:email => "test@example.com")
-user.password = "passw0rd"
-user.save!
-`,
     };
 
     this.httpsProxy = new nginx.HTTPSProxy(this, {
@@ -114,7 +120,8 @@ class Workbench extends kelda.Container {
     super({
       name: 'arvados-workbench',
       image: 'quay.io/kklin/arvados-workbench',
-      command: ['sh', '-c', 'install /init-scripts/*.sh /etc/my_init.d && exec /sbin/my_init'],
+      command: ['sh', '-c', 'install /init-scripts/*.sh /etc/my_init.d && ' +
+        'exec /sbin/my_init'],
     });
 
     this.port = 443;
@@ -133,10 +140,9 @@ class Workbench extends kelda.Container {
     const conf = mustache.render(workbenchConfTemplate, confParams);
 
     this.filepathToContent = {
-      '/init-scripts/90-init-workbench.sh': `#!/bin/bash
+      //'/init-scripts/90-init-db.sh': rails_util.initDBScript(''),
+      '/init-scripts/91-precompile-assets.sh': `#!/bin/bash
 set -e
-cd /home/app/arvados/apps/workbench
-RAILS_ENV=production bundle exec rake db:seed
 RAILS_ENV=production bundle exec rake assets:precompile
 `,
       '/home/app/arvados/apps/workbench/config/application.yml': conf,

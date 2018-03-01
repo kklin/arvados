@@ -1,6 +1,7 @@
 const kelda = require('kelda');
 const mustache = require('mustache');
 const consts = require('./consts');
+const rails_util = require('./rails_util');
 
 const apiServerConfigDir = '/home/app/arvados/services/api/config';
 const apiServerConfTemplate = readFile('config/arvados-api-server/application.yml');
@@ -11,16 +12,7 @@ class APIServer extends kelda.Container {
     super({
       name: 'arvados-api-server',
       image: 'quay.io/kklin/arvados-api-server',
-      command: ['sh', '-c',
-        'DB_STATUS=$(bundle exec rake db:migrate:status 2>&1);' +
-        'if echo $DB_STATUS | grep "PG::ConnectionBad: could not connect to server: Connection refused"; then ' +
-          // Exit so that Kelda will reschedule the container for later, at
-          // which point the database will hopefully be ready.
-          'exit 1;' +
-        'elif echo $DB_STATUS | grep "Schema migrations table does not exist yet."; then ' +
-          'bundle exec rake db:structure:load db:seed;' +
-        'fi && ' +
-        'bundle exec rake assets:precompile && ' +
+      command: ['sh', '-c', 'install /init-scripts/*.sh /etc/my_init.d && ' +
         'exec /sbin/my_init'],
       env: { RAILS_ENV: 'production' },
     });
@@ -41,6 +33,11 @@ class APIServer extends kelda.Container {
     });
     const dbConf = mustache.render(dbConfTemplate, dbConfParams);
     this.filepathToContent = {
+      '/init-scripts/90-init-db.sh': rails_util.initDBScript('db:structure:load'),
+      '/init-scripts/91-precompile-assets.sh': `#!/bin/bash
+set -e
+bundle exec rake assets:precompile
+`,
       [ path.join(apiServerConfigDir, '/application.yml') ]: appConf,
       [ path.join(apiServerConfigDir, '/database.yml') ]: dbConf,
       '/etc/nginx/sites-enabled/api-server.conf': readFile('config/arvados-api-server/nginx-site.conf'),

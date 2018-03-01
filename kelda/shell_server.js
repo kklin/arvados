@@ -40,7 +40,6 @@ class ShellServer extends kelda.Container {
     // TODO: It should just go through the private network... not sure why it's going to pub.
     kelda.allowTraffic(this, kelda.publicInternet, apiServer.port);
     kelda.allowTraffic(this, kelda.publicInternet, keepProxyPort);
-    // TODO: allow ACLs to pull docker images.
   }
 
   addInitScript(name, script) {

@@ -49,9 +49,11 @@ These instructions assume you've installed Kelda. See the Kelda
    └── key.pem
    ```
 
-4. *Trust the generated certificate*. By default, browsers treat self-signed
-   certificates as insecure. Therefore, the generated certificate must be
-   manually trusted through the OS settings.
+4. *Optional: Trust the generated certificate*. By default, browsers treat
+   self-signed certificates as insecure. Therefore, the generated certificate
+   must be manually trusted through the OS settings.  If you skip this step,
+   you'll have to manually override browser SSL warnings when connecting to
+   workbench.
 
    To do this on On Mac OS:
    1. Open the "Keychain Access" application.

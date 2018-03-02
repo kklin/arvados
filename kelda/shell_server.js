@@ -6,11 +6,6 @@ const kelda = require('kelda');
 // filepathToContent).
 const initScriptsStagingDir = '/init-scripts-staging';
 
-// XXX: This port is saved as a constant rather than read from a KeepProxy
-// instance to prevent a cyclic dependency. It must match the Keep proxy port
-// used in keep.js.
-const keepProxyPort = 25107;
-
 class ShellServer extends kelda.Container {
   constructor(apiServer) {
     super({
@@ -39,7 +34,6 @@ class ShellServer extends kelda.Container {
     kelda.allowTraffic(this, apiServer, apiServer.port);
     // TODO: It should just go through the private network... not sure why it's going to pub.
     kelda.allowTraffic(this, kelda.publicInternet, apiServer.port);
-    kelda.allowTraffic(this, kelda.publicInternet, keepProxyPort);
   }
 
   addInitScript(name, script) {

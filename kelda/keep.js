@@ -19,6 +19,12 @@ class KeepCluster {
     shellServer.addInitScript('99-trust-cert.sh', `#!/bin/bash
 cat /self-signed-cert.pem >> /etc/ssl/certs/ca-certificates.crt
 `)
+
+    // Let the shellServer communicate with Keep.
+    kelda.allowTraffic(shellServer, this.proxy, this.proxy.port);
+    // TODO: arv-keepdocker connects to the public address of the Keep proxy.
+    kelda.allowTraffic(shellServer, kelda.publicInternet, this.proxy.port);
+    kelda.allowTraffic(shellServer, this.stores, this.stores[0].port);
   }
 
   deploy(infra) {

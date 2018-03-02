@@ -4,7 +4,7 @@
   "main": "./arvados.js",
   "license": "MIT",
   "dependencies": {
-    "kelda": ">=0.0.5 <1.0.0",
+    "kelda": ">=0.12.0 <1.0.0",
     "mustache": "^2.3.0"
   },
   "devDependencies": {

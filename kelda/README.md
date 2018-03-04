@@ -33,7 +33,7 @@ These instructions assume you've installed Kelda. See the Kelda
    secure communication from the public internet. Run
 
    ```
-   ./config/ssl/cert-gen.sh <FLOATING IP>
+   (cd config/ssl; ./cert-gen.sh <FLOATING IP>)
    ```
 
    where `<FLOATING IP>` is replaced with the IP allocated in step 1, and

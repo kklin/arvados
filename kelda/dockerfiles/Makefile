@@ -1,4 +1,10 @@
-REPO = quay.io/kklin
+REPO = cure
+
+docker-push-arvados-runtime:
+	docker push ${REPO}/arvados-runtime
+
+docker-arvados-runtime:
+	docker build -t ${REPO}/arvados-runtime -f Dockerfile.runtime .
 
 docker-build-sso:
 	docker build -t ${REPO}/arvados-sso-server -f Dockerfile.sso .

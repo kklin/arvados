@@ -23,3 +23,8 @@ exports.ipToCert = {
 function readFile(f) {
   return fs.readFileSync(path.join(__dirname, f), { encoding: 'utf8' });
 }
+
+// The versions of the package to install
+exports.keepstoreVersion = '0.1.20180221204632.b77a0df*'
+exports.keepwebVersion = '0.1.20180221201302.00693ff*'
+exports.keepproxyVersion = '0.1.20180221201302.00693ff*'

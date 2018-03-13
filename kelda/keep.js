@@ -20,6 +20,13 @@ class KeepCluster {
 cat /self-signed-cert.pem >> /etc/ssl/certs/ca-certificates.crt
 `)
 
+    // Let the hosts pull in a package
+    // TODO: restrict this to apt.arvados.org
+    this.stores.map(c =>
+      kelda.allowTraffic(c, kelda.publicInternet, 80));
+    kelda.allowTraffic(this.proxy, kelda.publicInternet, 80);
+    kelda.allowTraffic(this.web, kelda.publicInternet, 80);
+
     // Let the shellServer communicate with Keep.
     kelda.allowTraffic(shellServer, this.proxy, this.proxy.port);
     // TODO: arv-keepdocker connects to the public address of the Keep proxy.
@@ -38,9 +45,9 @@ class KeepStore extends kelda.Container {
   constructor(blobSigningKey) {
     super({
       name: 'arvados-keep-store',
-      image: 'quay.io/kklin/arvados-keep',
-      command: ['sh', '-c', 'mkdir /keepdata && ' +
-        'GOGC=10 keepstore -enforce-permissions=true ' +
+      image: 'cure/arvados-runtime',
+      command: ['sh', '-c', 'mkdir /keepdata && /usr/local/bin/bootstrap.sh keepstore \'' + consts.keepstoreVersion + '\' ' +
+        '&& GOGC=10 keepstore -enforce-permissions=true ' +
         '-blob-signing-key-file=/etc/keepstore/blob-signing.key ' +
         // TODO: Be smarter about max-buffers value. E.g. we could have the caller
         // set it based on VM size.
@@ -57,8 +64,8 @@ class KeepProxy extends kelda.Container {
   constructor(apiServer, keepStores) {
     super({
       name: 'arvados-keep-proxy',
-      image: 'quay.io/kklin/arvados-keep',
-      command: ['keepproxy'],
+      image: 'cure/arvados-runtime',
+      command: ['sh', '-c', '/usr/local/bin/bootstrap.sh keepproxy \'' + consts.keepproxyVersion + '\' ' + '&& keepproxy'],
       env: {
         ARVADOS_API_TOKEN: new kelda.Secret('keep-proxy-api-token'),
         ARVADOS_API_HOST: `${apiServer.getHostname()}:${apiServer.port}`,
@@ -88,8 +95,9 @@ class KeepWeb extends kelda.Container {
   constructor(apiServer, keepStores) {
     super({
       name: 'arvados-keep-web',
-      image: 'quay.io/kklin/arvados-keep',
-      command: ['keep-web', '-listen=:9002', '-trust-all-content'],
+      image: 'cure/arvados-runtime',
+      command: ['sh', '-c', '/usr/local/bin/bootstrap.sh keep-web \'' + consts.keepwebVersion + '\' ' + '&& keep-web', '-listen=:9002', '-trust-all-content'],
+      //command: ['keep-web', '-listen=:9002', '-trust-all-content'],
       env: {
         ARVADOS_API_HOST: `${apiServer.getHostname()}:${apiServer.port}`,
         ARVADOS_API_TOKEN: new kelda.Secret('keep-web-api-token'),

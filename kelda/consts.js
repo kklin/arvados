@@ -3,6 +3,12 @@ const net = require('net');
 // The IP at which public-facing services will be available.
 exports.floatingIP = '<FLOATING IP>';
 
+// The provider to run the Kelda machines in.
+exports.provider = 'Amazon';
+
+// The size of the Kelda machines.
+exports.size = 'm4.xlarge';
+
 // The number of worker VMs to boot.
 exports.numWorkers = 3;
 

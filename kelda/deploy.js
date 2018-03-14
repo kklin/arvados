@@ -32,7 +32,7 @@ function main() {
   const workbench = new Workbench(apiServer, keep.web);
   const slurm = new SLURM(apiServer, keep.stores, consts.slurmScale, 'foobarzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz');
 
-  const baseMachine = new kelda.Machine({provider: 'Amazon', size: 'm4.xlarge'});
+  const baseMachine = new kelda.Machine({provider: consts.provider, size: consts.size});
   const machineWithFloatingIP = baseMachine.clone();
   machineWithFloatingIP.floatingIp = consts.floatingIP;
 

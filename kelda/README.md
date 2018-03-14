@@ -165,9 +165,16 @@ readers can know exactly what is expected to work at this time.
 
 ## Configuration
 
-The `numWorkers`, `slurmScale`, and `keepScale` variables in
-[consts.js](consts.js) can be tweaked to change the deployment. To deploy
+The `numWorkers`, `provider`, `size`, `slurmScale`, and `keepScale` variables
+in [consts.js](consts.js) can be tweaked to change the deployment. To deploy
 changes after changing a variable, `kelda run ./deploy.js` must be run again.
+
+### Changing Machine Types
+
+By default, the blueprint boots Arvados on m4.xlarge machines in AWS. If a
+different provider, or different-sized machines, is desired, the machines can
+be updated by editing the `provider` and `size` variables in
+[consts.js](consts.js).
 
 ## Known Issues
 

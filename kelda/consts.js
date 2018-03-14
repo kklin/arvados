@@ -1,8 +1,7 @@
+const net = require('net');
+
 // The IP at which public-facing services will be available.
 exports.floatingIP = '<FLOATING IP>';
-if (exports.floatingIP === '<FLOATING IP>') {
-  throw new Error('a floating IP is required');
-}
 
 // The number of worker VMs to boot.
 exports.numWorkers = 3;
@@ -22,4 +21,9 @@ exports.ipToCert = {
 
 function readFile(f) {
   return fs.readFileSync(path.join(__dirname, f), { encoding: 'utf8' });
+}
+
+if (!net.isIP(exports.floatingIP)) {
+  throw new Error(`${exports.floatingIP} isn't a valid IP address. ` +
+    'Update exports.floatingIP in consts.js with a floating IP.');
 }

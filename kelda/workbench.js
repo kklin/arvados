@@ -87,8 +87,8 @@ class WebSocket extends kelda.Container {
   constructor(postgres, db) {
     super({
       name: 'arvados-ws',
-      image: 'quay.io/kklin/arvados-ws',
-      command: ['ws'],
+      image: 'cure/arvados-runtime',
+      command: ['sh', '-c', '/usr/local/bin/bootstrap.sh arvados-ws \'' + consts.arvadosWsVersion + '\' ' + '&& ws'],
     });
 
     this.port = 9003;
@@ -107,6 +107,10 @@ class WebSocket extends kelda.Container {
 
     kelda.allowTraffic(kelda.publicInternet, this.httpsProxy, this.port);
     kelda.allowTraffic(this, postgres, postgres.port);
+
+    // Let the hosts pull in a package
+    // TODO: restrict this to apt.arvados.org
+    kelda.allowTraffic(this, kelda.publicInternet, 80);
   }
 
   deploy(infra) {

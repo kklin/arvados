@@ -28,3 +28,4 @@ function readFile(f) {
 exports.keepstoreVersion = '0.1.20180221204632.b77a0df*'
 exports.keepwebVersion = '0.1.20180221201302.00693ff*'
 exports.keepproxyVersion = '0.1.20180221201302.00693ff*'
+exports.arvadosWsVersion = '0.1.20180221201302.00693ff*'

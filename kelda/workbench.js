@@ -88,7 +88,7 @@ class WebSocket extends kelda.Container {
     super({
       name: 'arvados-ws',
       image: 'cure/arvados-runtime',
-      command: ['sh', '-c', '/usr/local/bin/bootstrap.sh arvados-ws \'' + consts.arvadosWsVersion + '\' ' + '&& ws'],
+      command: ['sh', '-c', '/usr/local/bin/bootstrap.sh arvados-ws \'' + consts.arvadosWsVersion + '\' ' + '&& arvados-ws'],
     });
 
     this.port = 9003;

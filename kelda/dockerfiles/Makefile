@@ -1,5 +1,11 @@
 REPO = cure
 
+docker-push-arvados-rails-runtime:
+	docker push ${REPO}/arvados-rails-runtime
+
+docker-arvados-rails-runtime:
+	docker build -t ${REPO}/arvados-rails-runtime -f Dockerfile.rails-runtime .
+
 docker-push-arvados-runtime:
 	docker push ${REPO}/arvados-runtime
 

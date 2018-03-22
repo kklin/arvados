@@ -123,9 +123,8 @@ class Workbench extends kelda.Container {
   constructor(apiServer, keepWeb) {
     super({
       name: 'arvados-workbench',
-      image: 'quay.io/kklin/arvados-workbench',
-      command: ['sh', '-c', 'install /init-scripts/*.sh /etc/my_init.d && ' +
-        'exec /sbin/my_init'],
+      image: 'cure/arvados-rails-runtime',
+      command: ['sh', '-c', '/usr/local/bin/bootstrap.sh arvados-workbench \'' + consts.arvadosWorkbenchVersion + '\' ' + '&& exec /sbin/my_init'],
     });
 
     this.port = 443;
@@ -144,12 +143,7 @@ class Workbench extends kelda.Container {
     const conf = mustache.render(workbenchConfTemplate, confParams);
 
     this.filepathToContent = {
-      //'/init-scripts/90-init-db.sh': rails_util.initDBScript(''),
-      '/init-scripts/91-precompile-assets.sh': `#!/bin/bash
-set -e
-RAILS_ENV=production bundle exec rake assets:precompile
-`,
-      '/home/app/arvados/apps/workbench/config/application.yml': conf,
+      '/etc/arvados/workbench/application.yml': conf,
       '/etc/nginx/sites-enabled/workbench.conf': readFile('config/arvados-workbench/nginx-site.conf'),
       '/etc/ssl/certs/workbench.pem': readFile('config/ssl/certificate.pem'),
       '/etc/ssl/private/workbench.key': readFile('config/ssl/key.pem'),
@@ -157,6 +151,10 @@ RAILS_ENV=production bundle exec rake assets:precompile
 
     kelda.allowTraffic(this, kelda.publicInternet, apiServer.port);
     kelda.allowTraffic(kelda.publicInternet, this, this.port);
+
+    // Let the hosts pull in a package
+    // TODO: restrict this to apt.arvados.org
+    kelda.allowTraffic(this, kelda.publicInternet, 80);
   }
 }
 

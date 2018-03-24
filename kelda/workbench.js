@@ -8,15 +8,15 @@ const wsConfTemplate = readFile('config/arvados-ws/ws.yml');
 const workbenchConfTemplate = readFile('config/arvados-workbench/application.yml');
 const ssoConfTemplate = readFile('config/arvados-sso/application.yml');
 const dbConfTemplate = readFile('config/database.yml');
-const ssoConfigDir = '/home/app/sso-devise-omniauth-provider/config';
+const ssoConfigDir = '/etc/arvados/sso';
 
 class SSOServer extends kelda.Container {
   constructor(postgres, db) {
     super({
       name: 'arvados-sso-server',
-      image: 'quay.io/kklin/arvados-sso-server',
-      command: ['sh', '-c', 'install /init-scripts/*.sh /etc/my_init.d && ' +
-        'exec /sbin/my_init'],
+      image: 'cure/arvados-rails-runtime',
+      command: ['sh', '-c', 'install /init-scripts/*.sh /etc/my_init.d && /usr/local/bin/bootstrap.sh arvados-sso-server \'' + consts.arvadosSSOServerVersion + '\' ' + '&& cd /var/www/arvados-sso/current && exec /sbin/my_init'],
+
       env: { RAILS_ENV: 'production' },
     });
 
@@ -31,10 +31,6 @@ class SSOServer extends kelda.Container {
     const dbConf = mustache.render(dbConfTemplate, dbConfParams);
     this.filepathToContent = {
       '/init-scripts/90-init-db.sh': rails_util.initDBScript('db:schema:load'),
-      '/init-scripts/91-precompile-assets.sh': `#!/bin/bash
-set -e
-bundle exec rake assets:precompile
-`,
       '/init-scripts/92-init-client.sh': `#!/bin/bash
 set -e
 bundle exec rails runner /init-client.rb
@@ -53,7 +49,7 @@ end
   listen 0.0.0.0:${this.port};
   server_name insecure-sso;
 
-  root /home/app/sso-devise-omniauth-provider/public;
+  root /var/www/arvados-sso/current/public;
   index  index.html index.htm index.php;
 
   passenger_enabled on;
@@ -72,6 +68,10 @@ end
     kelda.allowTraffic(kelda.publicInternet, this.httpsProxy, this.port);
 
     kelda.allowTraffic(this, postgres, postgres.port);
+
+    // Let the hosts pull in a package
+    // TODO: restrict this to apt.arvados.org
+    kelda.allowTraffic(this, kelda.publicInternet, 80);
   }
 
   deploy(infra) {

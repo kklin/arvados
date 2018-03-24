@@ -9,15 +9,10 @@ fi
 kelda secret shell-server-api-token $1
 
 # NOTE: Sometimes the following command has to be run twice before it works. I'm not sure why yet.
-kelda ssh arvados-api-server /usr/bin/rvm-exec default bundle exec ./script/get_anonymous_user_token.rb --get || true
-anon_token=$(kelda ssh arvados-api-server /usr/bin/rvm-exec default bundle exec ./script/get_anonymous_user_token.rb --get)
+kelda ssh arvados-api-server bash /get-anonymous-token.sh 2>&1 > /dev/null
+anon_token=$(kelda ssh arvados-api-server bash /get-anonymous-token.sh)
 kelda secret keep-proxy-api-token $anon_token
 kelda secret keep-web-api-token $anon_token
 
-superuser_token=$(kelda ssh arvados-api-server /usr/bin/rvm-exec default bundle exec script/create_superuser_token.rb)
+superuser_token=$(kelda ssh arvados-api-server bash /get-superuser-token.sh)
 kelda secret crunch-dispatcher-api-token $superuser_token
-
-# TODO: The Dockerfile needs to be refactored so that this isn't necessary.
-# It's needed right now because the files are installed by the root user, but
-# the `rails server` executes as the nobody user.
-kelda ssh arvados-workbench chown -R nobody tmp

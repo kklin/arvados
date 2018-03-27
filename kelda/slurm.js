@@ -1,5 +1,6 @@
 const kelda = require('kelda');
 const mustache = require('mustache');
+const consts = require('./consts');
 
 const slurmConfTemplate = `ControlMachine={{controllerHost}}
 SlurmctldPort=6817
@@ -50,7 +51,7 @@ class SLURM {
   constructor(apiServer, keepStores, n, mungeKey) {
     this.controller = new kelda.Container({
       name: 'slurm-controller',
-      image: 'quay.io/kklin/slurm',
+      image: 'cure/arvados-slurm-runtime',
       env: {
         ARVADOS_API_HOST: `${apiServer.getHostname()}:${apiServer.port}`,
         ARVADOS_API_TOKEN: new kelda.Secret('crunch-dispatcher-api-token'),
@@ -61,6 +62,7 @@ class SLURM {
       // nothing will restart it. Instead, the container should bundle a real
       // init system, and handle managing the backgrounded process.
       command: ['sh', '-c',
+        '/usr/local/bin/bootstrap.sh crunch-dispatch-slurm=' + consts.crunchDispatchSlurmVersion + ' && ' +
         'chown munge /etc/munge/munge.key; ' +
         'chmod 0400 /etc/munge/munge.key; ' +
         'sudo -u munge munged & ' +
@@ -70,6 +72,10 @@ class SLURM {
     });
     kelda.allowTraffic(this.controller, apiServer, apiServer.port);
 
+    // Let the hosts pull in a package
+    // TODO: restrict this to apt.arvados.org
+    kelda.allowTraffic(this.controller, kelda.publicInternet, 80);
+
     const dockerVolume = new kelda.Volume({
       name: 'docker',
       type: 'hostPath',
@@ -77,8 +83,11 @@ class SLURM {
     });
     this.computeNodes = Array(n).fill().map(() => new kelda.Container({
       name: 'slurm-compute',
-      image: 'quay.io/kklin/slurm',
+      image: 'cure/arvados-slurm-runtime',
       command: ['sh', '-c',
+        '/usr/local/bin/bootstrap.sh python-arvados-python-client=' + consts.pythonArvadosPythonClientVersion + ' ' +
+        'crunch-run=' + consts.crunchRunVersion + ' ' +
+        'python-arvados-fuse=' + consts.pythonArvadosFuseVersion + ' && ' +
         'chown munge /etc/munge/munge.key; ' +
         'chmod 0400 /etc/munge/munge.key; ' +
         'sudo -u munge munged & ' +
@@ -124,6 +133,10 @@ class SLURM {
 
     // The compute nodes pull data from Keep.
     kelda.allowTraffic(this.computeNodes, keepStores, keepStores[0].port);
+
+    // Let the hosts pull in a package
+    // TODO: restrict this to apt.arvados.org
+    kelda.allowTraffic(this.computeNodes, kelda.publicInternet, 80);
   }
 
   deploy(infra) {

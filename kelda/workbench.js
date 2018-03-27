@@ -15,7 +15,7 @@ class SSOServer extends kelda.Container {
     super({
       name: 'arvados-sso-server',
       image: 'cure/arvados-rails-runtime',
-      command: ['sh', '-c', 'install /init-scripts/*.sh /etc/my_init.d && /usr/local/bin/bootstrap.sh arvados-sso-server \'' + consts.arvadosSSOServerVersion + '\' ' + '&& cd /var/www/arvados-sso/current && exec /sbin/my_init'],
+      command: ['sh', '-c', 'install /init-scripts/*.sh /etc/my_init.d && /usr/local/bin/bootstrap.sh arvados-sso-server=' + consts.arvadosSSOServerVersion + ' ' + '&& cd /var/www/arvados-sso/current && exec /sbin/my_init'],
 
       env: { RAILS_ENV: 'production' },
     });
@@ -88,7 +88,7 @@ class WebSocket extends kelda.Container {
     super({
       name: 'arvados-ws',
       image: 'cure/arvados-runtime',
-      command: ['sh', '-c', '/usr/local/bin/bootstrap.sh arvados-ws \'' + consts.arvadosWsVersion + '\' ' + '&& arvados-ws'],
+      command: ['sh', '-c', '/usr/local/bin/bootstrap.sh arvados-ws=' + consts.arvadosWsVersion + ' ' + '&& arvados-ws'],
     });
 
     this.port = 9003;
@@ -124,7 +124,7 @@ class Workbench extends kelda.Container {
     super({
       name: 'arvados-workbench',
       image: 'cure/arvados-rails-runtime',
-      command: ['sh', '-c', '/usr/local/bin/bootstrap.sh arvados-workbench \'' + consts.arvadosWorkbenchVersion + '\' ' + '&& exec /sbin/my_init'],
+      command: ['sh', '-c', '/usr/local/bin/bootstrap.sh arvados-workbench=' + consts.arvadosWorkbenchVersion + ' ' + '&& exec /sbin/my_init'],
     });
 
     this.port = 443;

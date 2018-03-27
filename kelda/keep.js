@@ -46,7 +46,7 @@ class KeepStore extends kelda.Container {
     super({
       name: 'arvados-keep-store',
       image: 'cure/arvados-runtime',
-      command: ['sh', '-c', 'mkdir /keepdata && /usr/local/bin/bootstrap.sh keepstore \'' + consts.keepstoreVersion + '\' ' +
+      command: ['sh', '-c', 'mkdir /keepdata && /usr/local/bin/bootstrap.sh keepstore=' + consts.keepstoreVersion + ' ' +
         '&& GOGC=10 keepstore -enforce-permissions=true ' +
         '-blob-signing-key-file=/etc/keepstore/blob-signing.key ' +
         // TODO: Be smarter about max-buffers value. E.g. we could have the caller
@@ -65,7 +65,7 @@ class KeepProxy extends kelda.Container {
     super({
       name: 'arvados-keep-proxy',
       image: 'cure/arvados-runtime',
-      command: ['sh', '-c', '/usr/local/bin/bootstrap.sh keepproxy \'' + consts.keepproxyVersion + '\' ' + '&& keepproxy'],
+      command: ['sh', '-c', '/usr/local/bin/bootstrap.sh keepproxy=' + consts.keepproxyVersion + ' ' + '&& keepproxy'],
       env: {
         ARVADOS_API_TOKEN: new kelda.Secret('keep-proxy-api-token'),
         ARVADOS_API_HOST: `${apiServer.getHostname()}:${apiServer.port}`,
@@ -96,7 +96,7 @@ class KeepWeb extends kelda.Container {
     super({
       name: 'arvados-keep-web',
       image: 'cure/arvados-runtime',
-      command: ['sh', '-c', '/usr/local/bin/bootstrap.sh keep-web \'' + consts.keepwebVersion + '\' ' + '&& keep-web', '-listen=:9002', '-trust-all-content'],
+      command: ['sh', '-c', '/usr/local/bin/bootstrap.sh keep-web=' + consts.keepwebVersion + ' ' + '&& keep-web', '-listen=:9002', '-trust-all-content'],
       //command: ['keep-web', '-listen=:9002', '-trust-all-content'],
       env: {
         ARVADOS_API_HOST: `${apiServer.getHostname()}:${apiServer.port}`,

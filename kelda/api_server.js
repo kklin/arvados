@@ -12,7 +12,7 @@ class APIServer extends kelda.Container {
     super({
       name: 'arvados-api-server',
       image: 'cure/arvados-rails-runtime',
-      command: ['sh', '-c', 'install /init-scripts/*.sh /etc/my_init.d && /usr/local/bin/bootstrap.sh arvados-api-server \'' + consts.arvadosApiServerVersion + '\' ' + '&& cd /var/www/arvados-api/current && exec /sbin/my_init'],
+      command: ['sh', '-c', 'install /init-scripts/*.sh /etc/my_init.d && /usr/local/bin/bootstrap.sh arvados-api-server=' + consts.arvadosApiServerVersion + ' ' + '&& cd /var/www/arvados-api/current && exec /sbin/my_init'],
 
       env: { RAILS_ENV: 'production' },
     });

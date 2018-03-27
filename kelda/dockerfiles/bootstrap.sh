@@ -1,14 +1,11 @@
 #!/bin/bash
 
-PACKAGE=$1
-PACKAGE_VERSION=$2
-
-if [[ "$PACKAGE" == "" ]] || [[ "$PACKAGE_VERSION" == "" ]]; then
-  echo "Syntax: $0 <package> <version>"
+if [[ "$1" == "" ]]; then
+  echo "Syntax: $0 <package=version> [package=version] ..."
   exit 1
 fi
 
-if [[ "$PACKAGE" == "arvados-workbench" ]] || [[ "$PACKAGE" == "arvados-sso-server" ]] || [[ "$PACKAGE" == "arvados-api-server" ]]; then
+if [[ "$@" =~ "arvados-workbench=" ]] || [[ "$@" =~ "arvados-sso-server=" ]] || [[ "$@" =~ "arvados-api-server=" ]]; then
   RESET_NGINX_DAEMON_FLAG=true
 else
   RESET_NGINX_DAEMON_FLAG=false
@@ -20,7 +17,7 @@ if [[ "$RESET_NGINX_DAEMON_FLAG" == true ]]; then
   sed -i 's/daemon off;/#daemon off;/' /etc/nginx/nginx.conf
 fi
 
-apt-get -qqy install $PACKAGE="$PACKAGE_VERSION"
+apt-get -qqy install $@
 
 if [[ "$RESET_NGINX_DAEMON_FLAG" == true ]]; then
   /etc/init.d/nginx stop

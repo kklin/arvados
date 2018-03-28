@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ "$1" == "" ]]; then
-  echo "Syntax: $0 <package=version> [package=version] ..."
+  echo "Syntax: $0 <package=version> [package=version] [gem:package=version] ..."
   exit 1
 fi
 
@@ -11,13 +11,33 @@ else
   RESET_NGINX_DAEMON_FLAG=false
 fi
 
+gems=()
+debs=()
+for var in "$@"; do
+  if [[ "$var" =~ "gem:" ]]; then
+    cleanvar=${var#gem:}
+    gems+=" $cleanvar"
+  else
+    debs+=" $var"
+  fi
+done
+
 if [[ "$RESET_NGINX_DAEMON_FLAG" == true ]]; then
   # our packages restart nginx; with the 'daemon off' flag in place, 
   # that makes package install hang. Arguably we shouldn't be restarting nginx on install.
   sed -i 's/daemon off;/#daemon off;/' /etc/nginx/nginx.conf
 fi
 
-apt-get -qqy install $@
+if [[ "$debs" != "" ]]; then
+  apt-get -qqy install $debs
+fi
+
+if [[ "$gems" != "" ]]; then
+  for var in $gems; do
+    IFS='=' arr=($var)
+    gem install ${arr[0]} -v ${arr[1]} --no-rdoc --no-ri
+  done
+fi
 
 if [[ "$RESET_NGINX_DAEMON_FLAG" == true ]]; then
   /etc/init.d/nginx stop

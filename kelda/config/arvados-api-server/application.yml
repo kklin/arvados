@@ -120,13 +120,13 @@ common:
   # Config parameters to automatically setup new users.
   # The params auto_setup_new_users_with_* are meaningful only when auto_setup_new_users is turned on.
   # auto_setup_name_blacklist is a list of usernames to be blacklisted for auto setup.
-  auto_setup_new_users: false
+  auto_setup_new_users: true
   auto_setup_new_users_with_vm_uuid: false
   auto_setup_new_users_with_repository: false
   auto_setup_name_blacklist: [arvados, git, gitolite, gitolite-admin, root, syslog]
 
   # When new_users_are_active is set to true, the user agreement check is skipped.
-  new_users_are_active: false
+  new_users_are_active: true
 
   # The e-mail address of the user you would like to become marked as an admin
   # user on their first login.
@@ -137,7 +137,7 @@ common:
 
   # If auto_admin_first_user is set to true, the first user to log in when no
   # other admin users exist will automatically become an admin user.
-  auto_admin_first_user: false
+  auto_admin_first_user: true
 
   # Email address to notify whenever a user creates a profile for the
   # first time
@@ -524,4 +524,4 @@ test:
   git_internal_dir: <%= Rails.root.join 'tmp', 'internal.git' %>
   websocket_address: "wss://0.0.0.0:<%= ENV['ARVADOS_TEST_WSS_PORT'] %>/websocket"
   trash_sweep_interval: -1
-  docker_image_formats: ["v1"]
+  docker_image_formats: ["v2"]

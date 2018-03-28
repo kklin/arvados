@@ -6,6 +6,8 @@ if [[ -z $1 ]] ; then
   exit 1
 fi
 
+kelda ssh arvados-api-server bash /trust-workbench.sh
+
 kelda secret shell-server-api-token $1
 
 # NOTE: Sometimes the following command has to be run twice before it works. I'm not sure why yet.

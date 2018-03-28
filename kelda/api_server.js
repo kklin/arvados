@@ -41,18 +41,13 @@ class APIServer extends kelda.Container {
       '/etc/ssl/private/api-server.key': readFile('config/ssl/key.pem'),
 
       // Helper scripts executed by an admin via `kelda ssh`.
-      '/trust-workbench-and-make-admin.sh': `#!/bin/bash
+      '/trust-workbench.sh': `#!/bin/bash
 cd /var/www/arvados-api/current
 bundle exec rails runner /trust-workbench.rb
-bundle exec rails runner /make-admin.rb
 `,
       '/trust-workbench.rb': `wb = ApiClient.all.select { |client| client.url_prefix == "https://${consts.floatingIP}/" }[0]
 include CurrentApiClient
 act_as_system_user do wb.update_attributes!(is_trusted: true) end
-`,
-      '/make-admin.rb': `Thread.current[:user] = User.all.select(&:identity_url).last
-Thread.current[:user].update_attributes is_admin: true, is_active: true
-User.where(is_admin: true).collect &:email
 `,
       '/get-anonymous-token.sh': `#!/bin/bash
 cd /var/www/arvados-api/current

@@ -40,23 +40,12 @@ class APIServer extends kelda.Container {
       '/etc/ssl/certs/api-server.pem': readFile('config/ssl/certificate.pem'),
       '/etc/ssl/private/api-server.key': readFile('config/ssl/key.pem'),
 
-      // Helper scripts executed by an admin via `kelda ssh`.
-      '/trust-workbench.sh': `#!/bin/bash
-cd /var/www/arvados-api/current
-bundle exec rails runner /trust-workbench.rb
-`,
-      '/trust-workbench.rb': `wb = ApiClient.all.select { |client| client.url_prefix == "https://${consts.floatingIP}/" }[0]
-include CurrentApiClient
-act_as_system_user do wb.update_attributes!(is_trusted: true) end
-`,
-      '/get-anonymous-token.sh': `#!/bin/bash
-cd /var/www/arvados-api/current
-/usr/bin/rvm-exec default bundle exec ./script/get_anonymous_user_token.rb --get
-`,
-      '/get-superuser-token.sh': `#!/bin/bash
-cd /var/www/arvados-api/current
-/usr/bin/rvm-exec default bundle exec script/create_superuser_token.rb
-`,
+      '/create-workbench-api-client.rb': `include CurrentApiClient
+act_as_system_user do
+  wb = ApiClient.new(:url_prefix => "https://${consts.floatingIP}/")
+  wb.save!
+  wb.update_attributes!(is_trusted: true)
+end`,
     };
 
     kelda.allowTraffic(this, kelda.publicInternet, ssoServer.port);
@@ -66,6 +55,7 @@ cd /var/www/arvados-api/current
     // Let the hosts pull in a package
     // TODO: restrict this to apt.arvados.org
     kelda.allowTraffic(this, kelda.publicInternet, 80);
+    kelda.allowTraffic(this, kelda.publicInternet, 443);
   }
 }
 

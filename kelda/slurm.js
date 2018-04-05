@@ -53,8 +53,8 @@ class SLURM {
       name: 'slurm-controller',
       image: 'cure/arvados-slurm-runtime',
       env: {
+        ARVADOS_API_TOKEN: `${consts.superUserSecret}`,
         ARVADOS_API_HOST: `${apiServer.getHostname()}:${apiServer.port}`,
-        ARVADOS_API_TOKEN: new kelda.Secret('crunch-dispatcher-api-token'),
         ARVADOS_API_HOST_INSECURE: "true",
       },
       // TODO: We're basically using `sh` as an init system by backgrounding

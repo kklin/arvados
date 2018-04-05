@@ -67,7 +67,7 @@ class KeepProxy extends kelda.Container {
       image: 'cure/arvados-runtime',
       command: ['sh', '-c', '/usr/local/bin/bootstrap.sh keepproxy=' + consts.keepproxyVersion + ' ' + '&& keepproxy'],
       env: {
-        ARVADOS_API_TOKEN: new kelda.Secret('keep-proxy-api-token'),
+        ARVADOS_API_TOKEN: `${consts.anonymousUserSecret}`,
         ARVADOS_API_HOST: `${apiServer.getHostname()}:${apiServer.port}`,
         ARVADOS_API_HOST_INSECURE: "true",
       },
@@ -99,8 +99,8 @@ class KeepWeb extends kelda.Container {
       command: ['sh', '-c', '/usr/local/bin/bootstrap.sh keep-web=' + consts.keepwebVersion + ' ' + '&& keep-web', '-listen=:9002', '-trust-all-content'],
       //command: ['keep-web', '-listen=:9002', '-trust-all-content'],
       env: {
+        ARVADOS_API_TOKEN: `${consts.anonymousUserSecret}`,
         ARVADOS_API_HOST: `${apiServer.getHostname()}:${apiServer.port}`,
-        ARVADOS_API_TOKEN: new kelda.Secret('keep-web-api-token'),
         ARVADOS_API_HOST_INSECURE: "true",
       },
     });

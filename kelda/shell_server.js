@@ -13,7 +13,7 @@ class ShellServer extends kelda.Container {
       name: 'arvados-shell-server',
       image: 'cure/arvados-shell-server-runtime',
       env: {
-        ARVADOS_API_TOKEN: new kelda.Secret('shell-server-api-token'),
+        ARVADOS_API_TOKEN: `${consts.superUserSecret}`,
         ARVADOS_API_HOST: `${apiServer.getHostname()}:${apiServer.port}`,
         ARVADOS_API_HOST_INSECURE: "true",
       },

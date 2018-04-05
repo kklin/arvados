@@ -106,8 +106,9 @@ These instructions assume you've installed Kelda. See the Kelda
    e5fa6ca741d5    i-0d3159dd58    nginx:1.10                           arvados-ws-https            running                                               4 minutes ago    13.56.215.88:9003
    ```
 
-9. *Login to the Workbench*. Step 10 requires that a user first log in to the
-   workbench so that the user can be made an admin. The default credentials are:
+9. The Arvados cluster is now ready to use!
+
+  *Login to the Workbench*. The default credentials are:
 
    ```
    username: test@example.com
@@ -118,22 +119,13 @@ These instructions assume you've installed Kelda. See the Kelda
    be found in the `PUBLIC IP` column of the `kelda show` output for the
    `arvados-workbench` container.
 
-10. *Generate API tokens*. Several components require API tokens in order to
-    operate (these are the containers with the "Waiting for secrets" status in
-    `kelda show`). We also need to make the API server trust workbench. Do this
-    by running `./manual.sh <ADMIN API TOKEN>`. The admin API token can be found
-    in the Workbench UI.
+   *Access the shell server*:
 
-    `manual.sh` will generate API tokens for the containers that require them,
-    and securely pass them to Kelda. The status for these containers should
-    change from `Waiting for secrets` to `running` within a minute or two.
-
-11. The Arvados cluster is now ready to use! To access the shell server, run
     `kelda ssh -t arvados-shell-server bash`.
     
     See the [testing](#testing) section for how we tested the cluster.
 
-12. When finished with the cluster, make sure to destroy the VMs with `kelda
+10. When finished with the cluster, make sure to destroy the VMs with `kelda
     stop` to avoid unnecessary charges.
 
 ## Testing
@@ -188,18 +180,7 @@ issue](https://github.com/kelda/kelda/issues/1394) in the Kelda repo on this
 bug.
 
 The current fix is to stop _all_ containers with `kelda stop -containers`
-before running the modified blueprint. Note that the `./manual.sh` script
-will need to be re-run.
-
-### Invalid Tokens After Restarting the Cluster with `kelda stop -containers`
-If the cluster is redeployed by running `kelda stop -containers` followed by
-`kelda run`, the containers that depend on API tokens will start with the
-tokens for the old cluster. However, these tokens will be invalid because the
-database was also restarted.
-
-Make sure to run `./manual.sh` again so that these containers get valid tokens.
-The containers will automatically restart when the tokens are updated by
-running the scripts.
+before running the modified blueprint.
 
 ## Next Steps
 - Setup the Arvados Git server. The Git server architecture doesn't work very
@@ -210,10 +191,6 @@ running the scripts.
     setup must happen _after_ the SSH server starts. This is a bit weird in the
     container model of having a single long-running process since it'll be
     tricky to start the setup process after the SSH server starts.
-- Remove the need for `manual.sh`.
-  - The `manual.sh` script iscopied from the manual setup instructions, but it
-    might be possible for their functionality to be automated by scripts that
-    run automatically when the containers start.
 - Improve the Arvados Docker images.
   - The images should be hosted by Arvados.
   - Minimize the image sizes. No cleanup is done right now after installing the

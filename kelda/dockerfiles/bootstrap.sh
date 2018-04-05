@@ -30,6 +30,11 @@ fi
 
 if [[ "$debs" != "" ]]; then
   apt-get -qqy install $debs
+  if [[ "$?" != "0" ]]; then
+    # Maybe we need to update the apt cache first?
+    apt-get update
+    apt-get -qqy install $debs
+  fi
 fi
 
 if [[ "$gems" != "" ]]; then
